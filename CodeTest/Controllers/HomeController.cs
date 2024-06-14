@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web.Mvc;
 using Quote.Contracts;
 using Quote.Models;
+using Newtonsoft.Json;
+using System.Net;
+
 
 namespace PruebaIngreso.Controllers
 {
@@ -50,9 +55,45 @@ namespace PruebaIngreso.Controllers
             return View();
         }
 
-        public ActionResult Test3()
+
+        public async Task<ActionResult>Test3()
         {
-            return View();
+
+            var code = "E-U10-UNILATIN";
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    string url = $"https://refactored-pancake.free.beeceptor.com/margin/{code}";
+                    HttpResponseMessage response = new HttpResponseMessage();
+                    var responseBody = string.Empty;
+
+                    Task.Run(async () =>
+                    {
+                        response = await client.GetAsync(url);
+                    }).GetAwaiter().GetResult();
+
+                    if(response.StatusCode == HttpStatusCode.OK)
+                    {
+                       responseBody = await response.Content.ReadAsStringAsync();
+
+                    } else
+                    {
+                        responseBody = JsonConvert.SerializeObject(new { margin = 0.0 });
+                    }
+
+                    ViewBag.Message = $"{responseBody}";
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.Message = "pelas";
+
+                }
+                    return View();
+
+            }
         }
 
         public ActionResult Test4()
@@ -62,7 +103,7 @@ namespace PruebaIngreso.Controllers
                 adults = 1,
                 ArrivalDate = DateTime.Now.AddDays(1),
                 DepartingDate = DateTime.Now.AddDays(2),
-                getAllRates = true,
+                getAllRates = true, 
                 GetQuotes = true,
                 RetrieveOptions = new TourQuoteRequestOptions
                 {
